@@ -18,6 +18,5 @@ regionRouter.delete('/:id', userAuthMiddleware.loadUser, regionCtr.delete);
 //optional to pass regionId as querry string params to get specific region details 
 //else a list of regions with details is recieved.
 regionRouter.get('/', userAuthMiddleware.loadUser, regionCtr.getRegion);
-// userRouter.get('/get-user', userMiddleware.loadUser, userCtr.getProfile);
 
 module.exports = regionRouter;
