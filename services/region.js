@@ -40,7 +40,7 @@ regionCtr.update = (req, res) => {
         regionId
     } = req.body;
 
-    const isOwner = commonUtil.checkIfOwner(req.user._id, regionId)
+    const isOwner = commonUtil.checkIfRegionOwner(req.user._id, regionId)
     if(isOwner){
         const updateObj = {
             description:description,
@@ -72,7 +72,7 @@ regionCtr.delete = (req, res) => {
         res.status(constants.code.error.notFound).json({ msg:'MSG_REGION_ID_CANNOT_BE_EMPTY'});
     }
 
-    const isOwner = commonUtil.checkIfOwner(req.user._id, regionId)
+    const isOwner = commonUtil.checkIfRegionOwner(req.user._id, regionId)
     
     if(isOwner){
         Region.remove({ _id: regionId })
@@ -87,8 +87,6 @@ regionCtr.delete = (req, res) => {
     else{
         res.status(constants.code.error.unauthorized).json({ error: 'USER_NOT_AUTHORISED'});
     }
-    
-
 }
 
 regionCtr.getRegion = (req, res) =>{
@@ -118,8 +116,7 @@ regionCtr.getRegion = (req, res) =>{
             console.error(err);
             res.status(constants.code.error.internalServerError).json({ error: 'ERR_INTERNAL_SERVER'});
         })
-    }
-    
+    }   
 }
 
 module.exports = regionCtr; 

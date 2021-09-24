@@ -34,7 +34,7 @@ const vectorSchema = new Schema({
             required: true
         }
     },
-    region:{
+    regionId:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'regions',
         required: true,
