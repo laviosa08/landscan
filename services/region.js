@@ -8,17 +8,16 @@ regionCtr.create = (req, res) => {
     const {
         description,
         name,
-        owner,
         location
     } = req.body;
-
+    
     const regionData = {
         name,
         description,
         owner,
         location
     };
-
+    regionData.owner = req.user._id,
     regionData.uid = commonUtil.generateUuid();
 
     const newRegion = new Region(regionData);
@@ -40,38 +39,55 @@ regionCtr.update = (req, res) => {
         location,
         regionId
     } = req.body;
-    const updateObj = {
-        description:description,
-        name:name,
-        owner:owner,
-        location:location,
+
+    const isOwner = commonUtil.checkIfOwner(req.user._id, regionId)
+    if(isOwner){
+        const updateObj = {
+            description:description,
+            name:name,
+            owner:owner,
+            location:location,
+        }
+        const options = {};
+        options.new = true;
+        Region.findByIdAndUpdate(regionId,updateObj,options)
+        .then((updatedRegion)=>{
+            res.status(constants.code.success).json({ msg:'MSG_REGION_UPDATED', region: updatedRegion});
+        })
+        .catch((err)=>{
+            console.error(err);
+            res.status(constants.code.error.internalServerError).json({ error: 'ERR_INTERNAL_SERVER' });
+        })
     }
-    const options = {};
-    options.new = true;
-    Region.findByIdAndUpdate(regionId,updateObj,options)
-    .then((updatedRegion)=>{
-        res.status(constants.code.success).json({ msg:'MSG_REGION_UPDATED', region: updatedRegion});
-    })
-    .catch((err)=>{
-        console.error(err);
-        res.status(constants.code.error.internalServerError).json({ error: req.t('ERR_INTERNAL_SERVER') });
-    })
+    else{
+        res.status(constants.code.error.unauthorized).json({ error: 'USER_NOT_AUTHORISED'});
+    }
+    
 }
 
 regionCtr.delete = (req, res) => {
     const regionId = req.params.regionId
+   
     if(!regionId){
         res.status(constants.code.error.notFound).json({ msg:'MSG_REGION_ID_CANNOT_BE_EMPTY'});
     }
+
+    const isOwner = commonUtil.checkIfOwner(req.user._id, regionId)
     
-    Region.remove({ _id: regionId })
-    .then((deleteObj)=>{
-        res.status(constants.code.success).json({ msg:'MSG_REGION_DELETED', regionDeleted: deleteObj.deletedCount});
-    })
-    .catch((err)=>{
-        console.error(err);
-        res.status(constants.code.error.internalServerError).json({ error: req.t('ERR_INTERNAL_SERVER') });
-    })
+    if(isOwner){
+        Region.remove({ _id: regionId })
+        .then((deleteObj)=>{
+            res.status(constants.code.success).json({ msg:'MSG_REGION_DELETED', regionDeleted: deleteObj.deletedCount});
+        })
+        .catch((err)=>{
+            console.error(err);
+            res.status(constants.code.error.internalServerError).json({ error:'ERR_INTERNAL_SERVER'});
+        })
+    }
+    else{
+        res.status(constants.code.error.unauthorized).json({ error: 'USER_NOT_AUTHORISED'});
+    }
+    
 
 }
 
@@ -90,7 +106,7 @@ regionCtr.getRegion = (req, res) =>{
         })
         .catch((err)=>{
             console.error(err);
-            res.status(constants.code.error.internalServerError).json({ error: req.t('ERR_INTERNAL_SERVER') });
+            res.status(constants.code.error.internalServerError).json({ error:'ERR_INTERNAL_SERVER'});
         })
     }
     else{
@@ -100,9 +116,10 @@ regionCtr.getRegion = (req, res) =>{
         })  
         .catch((err)=>{
             console.error(err);
-            res.status(constants.code.error.internalServerError).json({ error: req.t('ERR_INTERNAL_SERVER') });
+            res.status(constants.code.error.internalServerError).json({ error: 'ERR_INTERNAL_SERVER'});
         })
     }
     
 }
+
 module.exports = regionCtr; 
