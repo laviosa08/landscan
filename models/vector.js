@@ -33,7 +33,6 @@ const vectorSchema = new Schema({
             type: [[[Number]]], // Array of arrays of arrays of numbers
             required: true
         },
-        index: '2dsphere' // Create a special 2dsphere index on `location`
     },
     regionId:{
         type: mongoose.Schema.Types.ObjectId,
@@ -47,6 +46,9 @@ const vectorSchema = new Schema({
     }
 }, { collection: 'vectors', timestamps: true });
 
-const vectors = mongoose.model("vectors", regionSchema);
+// Create a special 2dsphere index on `location`
+vectorSchema.index({ polygon: "2dsphere"});
+
+const vectors = mongoose.model("vectors", vectorSchema);
 
 module.exports = vectors; 

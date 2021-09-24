@@ -147,16 +147,21 @@ vectorCtr.filter = async(req,res) => {
     });
     Vector.find({
         $or:[
-        {polygon: {$geoWithin: {$geometry: polygon}}},
-        {classId: classId},
-        {regionId: regionId},
+            {polygon: {$geoWithin: {$geometry: polygon}}},
+            {classId: classId},
+            {regionId: regionId},
         ]
     })
     .then((vectorArr)=>{
-        let filteredVectors = [];
         if(area || perimeter){
-            filteredVectors = await filterVectorsByArea(vectorArr,area,perimeter)
-            res.status(constants.code.success).json({ msg:'MSG_VECTORS_FOUND', vectors: filteredVectors});
+            filterVectorsByArea(vectorArr, area, perimeter)
+            .then((filteredVectors)=>{
+                res.status(constants.code.success).json({ msg:'MSG_VECTORS_FOUND', vectors: filteredVectors});
+            })
+            .catch((err)=>{
+                console.error(err);
+                res.status(constants.code.error.internalServerError).json({ error:'ERR_INTERNAL_SERVER'});
+            })
         }
         else{
             res.status(constants.code.success).json({ msg:'MSG_VECTORS_FOUND', vectors: vectorArr});

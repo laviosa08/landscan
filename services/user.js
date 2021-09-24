@@ -2,11 +2,12 @@ const constants = require('../config/constants');
 const User = require('../models/user'); 
 const commonUtil = require('../utility/common');
 const bcrypt = require('bcrypt');
+const jwt = require("jsonwebtoken");
 
 const userCtr = {};
 
 // User Login
-userCtr.signin = (req, res) => {
+userCtr.signin = async(req, res) => {
     const {
         password,
         userName,
@@ -23,7 +24,7 @@ userCtr.signin = (req, res) => {
         } 
         else { 
             if (bcrypt.compare(password, user.password)) {
-                const token = user.generateAuthToken();
+                const token = generateAuthToken(user._id);
                 return res.status(constants.code.success).json({ 
                     message : "User Logged In",
                     token: token 
@@ -66,7 +67,7 @@ userCtr.signup = async (req, res) => {
 
     createUser(userData).then((user) => {
         //set user token
-        let token = await user.generateAuthToken();
+        let token = generateAuthToken(user._id);
         return res.status(constants.code.success).json({ msg:'MSG_USER_CREATED', user: user, token:token});
     }).catch((err) => {
         logger.error(err);
@@ -87,5 +88,9 @@ const createUser = (userData) =>{
     }) 
 }
 
+const generateAuthToken = (userId)=>{
+    const token = jwt.sign({ _id: userId}, process.env.JwtSecret);
+    return token;
+}
 // Export module to allow it to be imported in other files 
 module.exports = userCtr; 

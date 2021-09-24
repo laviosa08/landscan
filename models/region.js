@@ -27,8 +27,7 @@ const regionSchema = new Schema({
         coordinates: {
             type: [Number],
             required: true
-        },
-        index: '2dsphere' // Create a special 2dsphere index on `location`
+        }
     },
     owner:{
         type: mongoose.Schema.Types.ObjectId,
@@ -37,6 +36,9 @@ const regionSchema = new Schema({
     }
 }, { collection: 'regions', timestamps: true });
 
-const users = mongoose.model("user", regionSchema);
+// Create a special 2dsphere index on `location`
+regionSchema.index({ location: "2dsphere" });
 
-module.exports = users; 
+const regions = mongoose.model("regions", regionSchema);
+
+module.exports = regions; 
