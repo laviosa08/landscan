@@ -1,5 +1,9 @@
+const turf = require('@turf/turf')
+
 const constants = require('../config/constants');
 const Vector = require('../models/vector'); 
+const VectorClass = require('../models/vectorClass');
+const Region = require('../models/vectorClass');
 const commonUtil = require('../utility/common');
 
 const vectorCtr = {};
@@ -100,9 +104,9 @@ vectorCtr.delete = (req,res) => {
 vectorCtr.getVector = (req,res) => {
     const vectorId = req.query.vectorId;
     /*  
-        1) If regionId is provided in query params then we send details of that specific region
-        else we send the list of regions
-        2) For sake simplicity of assignment I haven't implemented paging on region List but it can be 
+        1) If vectorId is provided in query params then we send details of that specific vector
+        else we send the list of Vectors
+        2) For sake simplicity of assignment I haven't implemented paging on vector List but it can be 
         done by adding limit and offset fields.
     */
     if(vectorId){
@@ -127,9 +131,72 @@ vectorCtr.getVector = (req,res) => {
     }
 }
 
-vectorCtr.filter = (req,res) => {
+vectorCtr.filter = async(req,res) => {
+    const {
+        className,
+        area,
+        perimeter,
+        regionUid,
+        polygon
+    } = req.query;
+    const classId = await VectorClass.findOne({name:className}).project({
+        _id: 1 
+    }); 
+    const regionId = await Region.findOne({uid:regionUid}).project({
+        _id: 1 
+    });
+    Vector.find({
+        $or:[
+        {polygon: {$geoWithin: {$geometry: polygon}}},
+        {classId: classId},
+        {regionId: regionId},
+        ]
+    })
+    .then((vectorArr)=>{
+        let filteredVectors = [];
+        if(area || perimeter){
+            filteredVectors = await filterVectorsByArea(vectorArr,area,perimeter)
+            res.status(constants.code.success).json({ msg:'MSG_VECTORS_FOUND', vectors: filteredVectors});
+        }
+        else{
+            res.status(constants.code.success).json({ msg:'MSG_VECTORS_FOUND', vectors: vectorArr});
+        }
 
+    })
 }
 
+const filterVectorsByArea = async (vectorArr, area = "", perimeter = "")=>{
+    let filteredVectors = [];
+    
+    if(area && perimeter){
+        vectorArr.forEach((vector)=>{
+            var areaOfThisPolygon = turf.area(vector.polygon.coordinates);
+            //Get Line String from the polygon and then get lineDistance(=perimeter) of that lineString 
+            var perimeterOfThisPolygon = turf.lineDistance(turf.linestring(myPoly.coordinates[0]))
+            if(area == areaOfThisPolygon && perimeter == perimeterOfThisPolygon){
+                filteredVectors.push(vector) 
+            }
+        });
+    }
+    else if(area && !perimeter){
+        vectorArr.forEach((vector)=>{
+            var areaOfThisPolygon = turf.area(vector.polygon.coordinates);
+            if(area == areaOfThisPolygon){
+                filteredVectors.push(vector) 
+            }
+        })
+    }
+    else {
+        vectorArr.forEach((vector)=>{
+            //Get Line String from the polygon and then get lineDistance(=perimeter) of that lineString 
+            var perimeterOfThisPolygon = turf.lineDistance(turf.linestring(myPoly.coordinates[0]))
+            if(perimeter == perimeterOfThisPolygon){
+                filteredVectors.push(vector) 
+            }
+        });    
+    }
+    return filteredVectors;
+     
+}
 
 module.exports = vectorCtr;

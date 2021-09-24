@@ -32,7 +32,8 @@ const vectorSchema = new Schema({
         coordinates: {
             type: [[[Number]]], // Array of arrays of arrays of numbers
             required: true
-        }
+        },
+        index: '2dsphere' // Create a special 2dsphere index on `location`
     },
     regionId:{
         type: mongoose.Schema.Types.ObjectId,
