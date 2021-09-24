@@ -1,6 +1,5 @@
 const express = require('express');
 const userCtr = require('../services/user');
-const userMiddleware = require('./userAuthMiddleware');
 
 const userRouter = express.Router();
 

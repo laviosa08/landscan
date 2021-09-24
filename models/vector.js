@@ -46,7 +46,7 @@ const vectorSchema = new Schema({
     }
 }, { collection: 'vectors', timestamps: true });
 
-// Create a special 2dsphere index on `location`
+// Create a special 2dsphere index on `polygon`
 vectorSchema.index({ polygon: "2dsphere"});
 
 const vectors = mongoose.model("vectors", vectorSchema);
